@@ -866,18 +866,21 @@ function Work({ projects, loading }: { projects: Project[]; loading: boolean }) 
 
   useEffect(() => {
     if (prefersReducedMotion || !gridRef.current || projects.length === 0) return;
+    const cards = gridRef.current.querySelectorAll(":scope > a");
+    if (cards.length === 0) return;
+    gsap.set(cards, { opacity: 0, y: 60 });
     const ctx = gsap.context(() => {
-      gsap.from(".project-card", {
-        scrollTrigger: {
-          trigger: gridRef.current,
-          start: "top 80%",
-          once: true,
-        },
-        opacity: 0,
-        y: 60,
+      gsap.to(cards, {
+        opacity: 1,
+        y: 0,
         duration: 0.8,
         stagger: 0.12,
         ease: "power3.out",
+        scrollTrigger: {
+          trigger: gridRef.current,
+          start: "top 85%",
+          once: true,
+        },
       });
     }, gridRef);
     return () => ctx.revert();
