@@ -765,32 +765,21 @@ function Pricing() {
 
   useEffect(() => {
     if (prefersReducedMotion || !gridRef.current) return;
+    const cols = gridRef.current.querySelectorAll(":scope > div");
+    if (cols.length === 0) return;
+    gsap.set(cols, { opacity: 0, y: 50 });
     const ctx = gsap.context(() => {
-      gsap.from(".pricing-col", {
-        scrollTrigger: {
-          trigger: gridRef.current,
-          start: "top 80%",
-          once: true,
-        },
-        opacity: 0,
-        y: 50,
-        scale: 0.95,
+      gsap.to(cols, {
+        opacity: 1,
+        y: 0,
         duration: 0.8,
         stagger: 0.15,
         ease: "power3.out",
-      });
-
-      gsap.from(".pricing-col-highlight", {
         scrollTrigger: {
           trigger: gridRef.current,
-          start: "top 75%",
+          start: "top 85%",
           once: true,
         },
-        scale: 0.8,
-        opacity: 0,
-        duration: 1,
-        ease: "back.out(1.4)",
-        delay: 0.3,
       });
     }, gridRef);
     return () => ctx.revert();
