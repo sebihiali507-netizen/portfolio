@@ -347,6 +347,7 @@ function Nav({ onAdmin }: { onAdmin: () => void }) {
   const links = [
     { href: "#about", label: "About" },
     { href: "#services", label: "Services" },
+    { href: "#pricing", label: "Pricing" },
     { href: "#work", label: "Work" },
     { href: "#contact", label: "Contact" },
   ];
@@ -679,6 +680,63 @@ function Services() {
             </div>
           </motion.div>
         ))}
+      </div>
+    </Section>
+  );
+}
+
+// ---------- pricing ----------
+function Pricing() {
+  const features = [
+    "Professional Design",
+    ".com Domain",
+    "Fast Hosting (Vercel)",
+    "Database (Supabase)",
+    "Admin Dashboard",
+    "Mobile Responsive",
+  ];
+
+  return (
+    <Section id="pricing" eyebrow="Pricing" title="Simple, transparent pricing.">
+      <div className="flex justify-center">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="group relative w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-[#111827]"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-600/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
+          <div className="relative p-8">
+            <h3 className="mb-1 text-xl font-semibold text-white">eCommerce Website</h3>
+            <p className="mb-6 text-sm text-white/50">Delivered in 48 hours</p>
+
+            <div className="mb-8">
+              <span className="text-5xl font-bold text-white">$500</span>
+            </div>
+
+            <ul className="mb-8 space-y-3">
+              {features.map((f) => (
+                <li key={f} className="flex items-center gap-3 text-sm text-white/70">
+                  <Check className="h-4 w-4 shrink-0 text-blue-400" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+
+            <a
+              href="#contact"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="block w-full rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 py-3 text-center text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-blue-500/25 hover:brightness-110 active:scale-[0.98]"
+            >
+              Hire Me
+            </a>
+          </div>
+        </motion.div>
       </div>
     </Section>
   );
@@ -1668,6 +1726,7 @@ export default function Portfolio({ openAdmin = false }: { openAdmin?: boolean }
         <Hero />
         <About />
         <Services />
+        <Pricing />
         <Work projects={projects} loading={projectsLoading} />
         <Contact />
       </main>
