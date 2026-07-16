@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence, useInView, useMotionValue, useSpring } from "framer-motion";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 import {
   Code2,
   ShoppingBag,
@@ -29,6 +33,11 @@ import {
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import type { User } from "@supabase/supabase-js";
+
+const prefersReducedMotion =
+  typeof window !== "undefined"
+    ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    : false;
 
 // ---------- supabase project helpers ----------
 type Project = {
@@ -259,6 +268,7 @@ function ParallaxChip({
   my: ReturnType<typeof useMotionValue<number>>;
   i: number;
 }) {
+  const chipRef = useRef<HTMLDivElement>(null);
   const depth = 20 + (i % 4) * 10;
   const tx = useSpring(useMotionValue(0), { stiffness: 40, damping: 15 });
   const ty = useSpring(useMotionValue(0), { stiffness: 40, damping: 15 });
@@ -270,21 +280,39 @@ function ParallaxChip({
       unsubY();
     };
   }, [mx, my, tx, ty, depth]);
-  return (
-    <motion.div
-      className="absolute"
-      style={{ left: `${tech.x}%`, top: `${tech.y}%`, x: tx, y: ty }}
-      initial={{ opacity: 0, scale: 0.6 }}
-      animate={{
+
+  useEffect(() => {
+    if (prefersReducedMotion || !chipRef.current) return;
+    gsap.fromTo(
+      chipRef.current,
+      { opacity: 0, scale: 0.5, y: 60 + i * 10 },
+      {
         opacity: 1,
         scale: 1,
-        y: [0, -14, 0],
-      }}
-      transition={{
-        opacity: { delay: 0.5 + i * 0.08, duration: 0.6 },
-        scale: { delay: 0.5 + i * 0.08, duration: 0.6 },
-        y: { duration: 4 + (i % 5), repeat: Infinity, ease: "easeInOut", delay: i * 0.2 },
-      }}
+        y: 0,
+        duration: 0.8,
+        delay: 0.6 + i * 0.08,
+        ease: "back.out(1.4)",
+      }
+    );
+    gsap.to(chipRef.current, {
+      scrollTrigger: {
+        trigger: chipRef.current,
+        start: "top center",
+        end: "bottom top",
+        scrub: 1.5,
+      },
+      y: -80 - i * 15,
+      opacity: 0.3,
+      ease: "none",
+    });
+  }, [i]);
+
+  return (
+    <motion.div
+      ref={chipRef}
+      className="hero-tech absolute"
+      style={{ left: `${tech.x}%`, top: `${tech.y}%`, x: tx, y: ty, opacity: 0 }}
     >
       <div
         className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/90 shadow-2xl backdrop-blur-md"
@@ -448,82 +476,107 @@ function Nav({ onAdmin }: { onAdmin: () => void }) {
 
 // ---------- hero ----------
 function Hero() {
-  const name = "Sebihi Mohamed";
+  const heroRef = useRef<HTMLDivElement>(null);
+  const nameWords = ["Sebihi", "Mohamed"];
+
+  useEffect(() => {
+    if (prefersReducedMotion || !heroRef.current) return;
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ delay: 0.3 });
+
+      tl.from(".hero-badge", { opacity: 0, y: 20, duration: 0.6, ease: "power3.out" })
+        .from(
+          ".hero-word",
+          { opacity: 0, y: 60, rotateX: -40, duration: 0.8, stagger: 0.15, ease: "power4.out" },
+          "-=0.3"
+        )
+        .from(
+          ".hero-subtitle",
+          { opacity: 0, y: 30, duration: 0.7, ease: "power3.out" },
+          "-=0.3"
+        )
+        .from(
+          ".hero-desc",
+          { opacity: 0, y: 30, duration: 0.7, ease: "power3.out" },
+          "-=0.4"
+        )
+        .from(
+          ".hero-cta",
+          { opacity: 0, y: 30, duration: 0.7, stagger: 0.1, ease: "power3.out" },
+          "-=0.3"
+        )
+        .from(
+          ".hero-scroll",
+          { opacity: 0, duration: 0.8, ease: "power2.out" },
+          "-=0.2"
+        );
+
+      gsap.from(".hero-tech", {
+        scrollTrigger: {
+          trigger: heroRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: 1,
+        },
+        opacity: 0,
+        scale: 0.6,
+        y: 80,
+        stagger: 0.05,
+        ease: "none",
+      });
+    }, heroRef);
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <section id="top" className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden">
+    <section id="top" ref={heroRef} className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden">
       <Particles />
       <FloatingTech />
       <div className="relative z-10 mx-auto max-w-5xl px-6 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs text-white/70 backdrop-blur-md"
+        <div
+          className="hero-badge mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs text-white/70 backdrop-blur-md"
         >
           <Sparkles className="h-3 w-3 text-blue-400" />
           Available for freelance projects
-        </motion.div>
-        <h1 className="text-3xl font-bold tracking-tight text-white sm:text-5xl md:text-8xl">
-          {name.split("").map((c, i) => (
-            <motion.span
-              key={i}
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 + i * 0.04, ease: "easeOut" }}
-              className="inline-block"
-            >
-              {c === " " ? "\u00A0" : c}
-            </motion.span>
+        </div>
+        <h1 className="text-3xl font-bold tracking-tight text-white sm:text-5xl md:text-8xl" style={{ perspective: 600 }}>
+          {nameWords.map((word, i) => (
+            <span key={i} className="hero-word inline-block" style={{ transformOrigin: "bottom" }}>
+              {i > 0 && "\u00A0"}
+              {word}
+            </span>
           ))}
         </h1>
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.4 }}
-          className="mt-6 text-lg font-light text-white/70 sm:text-xl md:text-3xl"
-        >
+        <div className="hero-subtitle mt-6 text-lg font-light text-white/70 sm:text-xl md:text-3xl">
           I'm a{" "}
           <Typewriter
             words={["Full Stack Developer", "React Expert", "Node.js Engineer", "UI/UX Craftsman"]}
           />
-        </motion.div>
-        <motion.p
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.6 }}
-          className="mx-auto mt-6 max-w-xl text-base text-white/50"
-        >
+        </div>
+        <p className="hero-desc mx-auto mt-6 max-w-xl text-base text-white/50">
           Crafting premium digital experiences with modern web technologies. From concept to
           deployment.
-        </motion.p>
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.8 }}
-          className="mt-10 flex flex-wrap items-center justify-center gap-4"
-        >
+        </p>
+        <div className="hero-cta mt-10 flex flex-wrap items-center justify-center gap-4">
           <a
             href="#work"
-            className="group relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition-all hover:scale-105 hover:shadow-blue-500/50 sm:px-8 sm:py-3.5 active:scale-95"
+            className="hero-cta group relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition-all hover:scale-105 hover:shadow-blue-500/50 sm:px-8 sm:py-3.5 active:scale-95"
           >
             View My Work
           </a>
           <a
             href="#contact"
-            className="rounded-xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur-md transition-all hover:scale-105 hover:border-white/30 hover:bg-white/10 active:scale-95 sm:px-8 sm:py-3.5"
+            className="hero-cta rounded-xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur-md transition-all hover:scale-105 hover:border-white/30 hover:bg-white/10 active:scale-95 sm:px-8 sm:py-3.5"
           >
             Hire Me
           </a>
-        </motion.div>
+        </div>
       </div>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 2.2 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-xs uppercase tracking-widest text-white/40 hidden sm:block"
+      <div
+        className="hero-scroll absolute bottom-8 left-1/2 -translate-x-1/2 text-xs uppercase tracking-widest text-white/40 hidden sm:block"
       >
         Scroll to explore
-      </motion.div>
+      </div>
     </section>
   );
 }
@@ -540,12 +593,33 @@ function Section({
   title: string;
   children: React.ReactNode;
 }) {
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (prefersReducedMotion || !sectionRef.current) return;
+    const ctx = gsap.context(() => {
+      gsap.from(sectionRef.current!.querySelectorAll(".section-reveal"), {
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 85%",
+          once: true,
+        },
+        opacity: 0,
+        y: 40,
+        duration: 0.8,
+        stagger: 0.15,
+        ease: "power3.out",
+      });
+    }, sectionRef);
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <section id={id} className="relative border-t border-white/5 py-16 sm:py-24 md:py-32">
+    <section ref={sectionRef} id={id} className="relative border-t border-white/5 py-16 sm:py-24 md:py-32">
       <div className="mx-auto max-w-7xl px-6">
         <div className="mb-16 max-w-2xl">
-          <p className="mb-3 text-xs uppercase tracking-[0.3em] text-blue-400">{eyebrow}</p>
-          <h2 className="text-4xl font-bold tracking-tight text-white md:text-5xl">{title}</h2>
+          <p className="section-reveal mb-3 text-xs uppercase tracking-[0.3em] text-blue-400">{eyebrow}</p>
+          <h2 className="section-reveal text-4xl font-bold tracking-tight text-white md:text-5xl">{title}</h2>
         </div>
         {children}
       </div>
@@ -687,6 +761,7 @@ function Services() {
 
 // ---------- pricing ----------
 function Pricing() {
+  const cardRef = useRef<HTMLDivElement>(null);
   const features = [
     "Professional Design",
     ".com Domain",
@@ -696,14 +771,57 @@ function Pricing() {
     "Mobile Responsive",
   ];
 
+  useEffect(() => {
+    if (prefersReducedMotion || !cardRef.current) return;
+    const ctx = gsap.context(() => {
+      gsap.from(cardRef.current, {
+        scrollTrigger: {
+          trigger: cardRef.current,
+          start: "top 80%",
+          once: true,
+        },
+        opacity: 0,
+        scale: 0.8,
+        y: 50,
+        duration: 0.8,
+        ease: "power3.out",
+      });
+
+      gsap.from(".pricing-feature", {
+        scrollTrigger: {
+          trigger: cardRef.current,
+          start: "top 65%",
+          once: true,
+        },
+        opacity: 0,
+        x: -20,
+        duration: 0.5,
+        stagger: 0.1,
+        ease: "power2.out",
+        delay: 0.4,
+      });
+
+      gsap.from(".pricing-btn", {
+        scrollTrigger: {
+          trigger: cardRef.current,
+          start: "top 65%",
+          once: true,
+        },
+        opacity: 0,
+        y: 15,
+        duration: 0.6,
+        ease: "power2.out",
+        delay: 1.1,
+      });
+    }, cardRef);
+    return () => ctx.revert();
+  }, []);
+
   return (
     <Section id="pricing" eyebrow="Pricing" title="Simple, transparent pricing.">
       <div className="flex justify-center">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+        <div
+          ref={cardRef}
           className="group relative w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-[#111827]"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-600/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
@@ -718,7 +836,7 @@ function Pricing() {
 
             <ul className="mb-8 space-y-3">
               {features.map((f) => (
-                <li key={f} className="flex items-center gap-3 text-sm text-white/70">
+                <li key={f} className="pricing-feature flex items-center gap-3 text-sm text-white/70">
                   <Check className="h-4 w-4 shrink-0 text-blue-400" />
                   {f}
                 </li>
@@ -731,12 +849,12 @@ function Pricing() {
                 e.preventDefault();
                 document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="block w-full rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 py-3 text-center text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-blue-500/25 hover:brightness-110 active:scale-[0.98]"
+              className="pricing-btn block w-full rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 py-3 text-center text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-blue-500/25 hover:brightness-110 active:scale-[0.98]"
             >
               Hire Me
             </a>
           </div>
-        </motion.div>
+        </div>
       </div>
     </Section>
   );
@@ -744,6 +862,27 @@ function Pricing() {
 
 // ---------- work ----------
 function Work({ projects, loading }: { projects: Project[]; loading: boolean }) {
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (prefersReducedMotion || !gridRef.current || projects.length === 0) return;
+    const ctx = gsap.context(() => {
+      gsap.from(".project-card", {
+        scrollTrigger: {
+          trigger: gridRef.current,
+          start: "top 80%",
+          once: true,
+        },
+        opacity: 0,
+        y: 60,
+        duration: 0.8,
+        stagger: 0.12,
+        ease: "power3.out",
+      });
+    }, gridRef);
+    return () => ctx.revert();
+  }, [projects.length]);
+
   return (
     <Section id="work" eyebrow="Portfolio" title="Selected client projects.">
       {loading ? (
@@ -769,18 +908,14 @@ function Work({ projects, loading }: { projects: Project[]; loading: boolean }) 
           <p className="text-white/50">No client projects yet — add from Admin Panel</p>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {projects.map((p, i) => (
-            <motion.a
+        <div ref={gridRef} className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {projects.map((p) => (
+            <a
               key={p.id}
               href={p.url}
               target="_blank"
               rel="noreferrer"
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
-              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#111827] transition-all hover:border-blue-500/40 active:scale-[0.98]"
+              className="project-card group relative overflow-hidden rounded-2xl border border-white/10 bg-[#111827] transition-all duration-500 hover:-translate-y-2 hover:border-blue-500/40 hover:shadow-[0_8px_40px_-12px_rgba(59,130,246,0.3)] active:scale-[0.98]"
             >
               <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-blue-500/20 via-purple-600/20 to-transparent">
                 {p.thumbnail ? (
@@ -820,7 +955,7 @@ function Work({ projects, loading }: { projects: Project[]; loading: boolean }) 
                   ))}
                 </div>
               </div>
-            </motion.a>
+            </a>
           ))}
         </div>
       )}
