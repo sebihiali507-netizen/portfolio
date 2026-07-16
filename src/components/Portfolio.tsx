@@ -27,7 +27,6 @@ import {
   Inbox,
   User as UserIcon,
 } from "lucide-react";
-import { useLoaderData } from "@tanstack/react-router";
 import { supabase } from "../lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
@@ -686,10 +685,27 @@ function Services() {
 }
 
 // ---------- work ----------
-function Work({ projects }: { projects: Project[] }) {
+function Work({ projects, loading }: { projects: Project[]; loading: boolean }) {
   return (
     <Section id="work" eyebrow="Portfolio" title="Selected client projects.">
-      {projects.length === 0 ? (
+      {loading ? (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="animate-pulse rounded-2xl border border-white/10 bg-[#111827]">
+              <div className="aspect-video bg-white/5" />
+              <div className="space-y-3 p-5">
+                <div className="h-4 w-2/3 rounded bg-white/10" />
+                <div className="h-3 w-full rounded bg-white/5" />
+                <div className="h-3 w-4/5 rounded bg-white/5" />
+                <div className="flex gap-1.5">
+                  <div className="h-5 w-12 rounded bg-white/5" />
+                  <div className="h-5 w-16 rounded bg-white/5" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : projects.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] p-16 text-center">
           <FolderKanban className="mx-auto mb-4 h-10 w-10 text-white/30" />
           <p className="text-white/50">No client projects yet — add from Admin Panel</p>
@@ -1577,27 +1593,10 @@ function Footer() {
   );
 }
 
-function mapRows(rows: Record<string, unknown>[]): Project[] {
-  return rows.map((row) => ({
-    id: row.id as string,
-    name: row.name as string,
-    client: row.client as string,
-    url: row.url as string,
-    description: row.description as string,
-    tags: (row.tags as string[]) || [],
-    category: row.category as string,
-    createdAt: row.created_at as string,
-    thumbnail: (row.thumbnail as string) || undefined,
-  }));
-}
-
 // ---------- main ----------
 export default function Portfolio({ openAdmin = false }: { openAdmin?: boolean } = {}) {
-  const loaderData = useLoaderData({ strict: false }) as { projects?: Record<string, unknown>[] } | undefined;
-  const [projects, setProjects] = useState<Project[]>(() => {
-    const rows = loaderData?.projects;
-    return rows ? mapRows(rows) : [];
-  });
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   const [gate, setGate] = useState(openAdmin);
   const [admin, setAdmin] = useState(false);
@@ -1624,6 +1623,13 @@ export default function Portfolio({ openAdmin = false }: { openAdmin?: boolean }
     });
 
     return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    loadProjects().then((items) => {
+      setProjects(items);
+      setProjectsLoading(false);
+    });
   }, []);
 
   const refresh = async () => {
@@ -1662,7 +1668,7 @@ export default function Portfolio({ openAdmin = false }: { openAdmin?: boolean }
         <Hero />
         <About />
         <Services />
-        <Work projects={projects} />
+        <Work projects={projects} loading={projectsLoading} />
         <Contact />
       </main>
       <Footer />
