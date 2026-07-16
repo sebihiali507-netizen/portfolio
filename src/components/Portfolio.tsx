@@ -27,6 +27,7 @@ import {
   Inbox,
   User as UserIcon,
 } from "lucide-react";
+import { useLoaderData } from "@tanstack/react-router";
 import { supabase } from "../lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
@@ -1576,9 +1577,27 @@ function Footer() {
   );
 }
 
+function mapRows(rows: Record<string, unknown>[]): Project[] {
+  return rows.map((row) => ({
+    id: row.id as string,
+    name: row.name as string,
+    client: row.client as string,
+    url: row.url as string,
+    description: row.description as string,
+    tags: (row.tags as string[]) || [],
+    category: row.category as string,
+    createdAt: row.created_at as string,
+    thumbnail: (row.thumbnail as string) || undefined,
+  }));
+}
+
 // ---------- main ----------
 export default function Portfolio({ openAdmin = false }: { openAdmin?: boolean } = {}) {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const loaderData = useLoaderData({ strict: false }) as { projects?: Record<string, unknown>[] } | undefined;
+  const [projects, setProjects] = useState<Project[]>(() => {
+    const rows = loaderData?.projects;
+    return rows ? mapRows(rows) : [];
+  });
   const [messages, setMessages] = useState<Message[]>([]);
   const [gate, setGate] = useState(openAdmin);
   const [admin, setAdmin] = useState(false);
@@ -1616,10 +1635,6 @@ export default function Portfolio({ openAdmin = false }: { openAdmin?: boolean }
     const items = await loadMessages();
     setMessages(items);
   };
-
-  useEffect(() => {
-    refresh();
-  }, []);
 
   useEffect(() => {
     if (admin) {
