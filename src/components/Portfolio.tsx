@@ -761,99 +761,138 @@ function Services() {
 
 // ---------- pricing ----------
 function Pricing() {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const features = [
-    "Professional Design",
-    ".com Domain",
-    "Fast Hosting (Vercel)",
-    "Database (Supabase)",
-    "Admin Dashboard",
-    "Mobile Responsive",
-  ];
+  const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (prefersReducedMotion || !cardRef.current) return;
+    if (prefersReducedMotion || !gridRef.current) return;
     const ctx = gsap.context(() => {
-      gsap.from(cardRef.current, {
+      gsap.from(".pricing-col", {
         scrollTrigger: {
-          trigger: cardRef.current,
+          trigger: gridRef.current,
           start: "top 80%",
           once: true,
         },
         opacity: 0,
-        scale: 0.8,
         y: 50,
+        scale: 0.95,
         duration: 0.8,
+        stagger: 0.15,
         ease: "power3.out",
       });
 
-      gsap.from(".pricing-feature", {
+      gsap.from(".pricing-col-highlight", {
         scrollTrigger: {
-          trigger: cardRef.current,
-          start: "top 65%",
+          trigger: gridRef.current,
+          start: "top 75%",
           once: true,
         },
+        scale: 0.8,
         opacity: 0,
-        x: -20,
-        duration: 0.5,
-        stagger: 0.1,
-        ease: "power2.out",
-        delay: 0.4,
+        duration: 1,
+        ease: "back.out(1.4)",
+        delay: 0.3,
       });
-
-      gsap.from(".pricing-btn", {
-        scrollTrigger: {
-          trigger: cardRef.current,
-          start: "top 65%",
-          once: true,
-        },
-        opacity: 0,
-        y: 15,
-        duration: 0.6,
-        ease: "power2.out",
-        delay: 1.1,
-      });
-    }, cardRef);
+    }, gridRef);
     return () => ctx.revert();
   }, []);
 
   return (
     <Section id="pricing" eyebrow="Pricing" title="Simple, transparent pricing.">
-      <div className="flex justify-center">
-        <div
-          ref={cardRef}
-          className="group relative w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-[#111827]"
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-600/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+      <div ref={gridRef} className="grid gap-6 md:grid-cols-3">
+        {/* Agencies */}
+        <div className="pricing-col relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-6 opacity-60 sm:p-8">
+          <h3 className="mb-1 text-lg font-semibold text-white/70 line-through decoration-red-500/60 decoration-2">Agencies</h3>
+          <p className="mb-4 text-sm text-white/30">Professional agencies</p>
+          <div className="mb-2">
+            <span className="text-4xl font-bold text-white/40 line-through decoration-red-500/50">$3,000+</span>
+          </div>
+          <p className="mb-6 text-xs text-white/25">4-8 weeks delivery</p>
+          <ul className="space-y-3">
+            {[
+              "Expensive contracts",
+              "Long delivery time",
+              "No direct communication",
+              "Hidden fees",
+              "You don't own the code",
+            ].map((f) => (
+              <li key={f} className="pricing-feature flex items-center gap-3 text-sm text-white/40">
+                <X className="h-4 w-4 shrink-0 text-red-500/80" />
+                {f}
+              </li>
+            ))}
+          </ul>
+        </div>
 
-          <div className="relative p-8">
-            <h3 className="mb-1 text-xl font-semibold text-white">eCommerce Website</h3>
-            <p className="mb-6 text-sm text-white/50">Delivered in 48 hours</p>
+        {/* Sebihi.dev — highlighted */}
+        <div className="pricing-col pricing-col-highlight relative overflow-hidden rounded-2xl border border-blue-500/30 bg-[#111827] p-6 sm:p-8 sm:-mt-4 sm:mb-[-1rem]">
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-500/10 via-purple-500/5 to-transparent" />
+          <div className="absolute -left-20 -top-20 h-40 w-40 rounded-full bg-blue-500/20 blur-3xl" />
+          <div className="absolute -bottom-20 -right-20 h-40 w-40 rounded-full bg-purple-500/20 blur-3xl" />
 
-            <div className="mb-8">
+          <div className="relative">
+            <div className="mb-4 inline-flex rounded-full border border-blue-500/40 bg-blue-500/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-blue-400">
+              Best Choice
+            </div>
+            <h3 className="mb-1 text-xl font-bold text-white">Sebihi.dev</h3>
+            <p className="mb-4 text-sm text-white/50">Direct freelancer</p>
+            <div className="mb-2">
               <span className="text-5xl font-bold text-white">$500</span>
             </div>
-
+            <p className="mb-6 text-xs text-blue-400/80 font-medium">Delivered in 48 hours</p>
             <ul className="mb-8 space-y-3">
-              {features.map((f) => (
-                <li key={f} className="pricing-feature flex items-center gap-3 text-sm text-white/70">
+              {[
+                "Professional Design",
+                ".com Domain",
+                "Fast Hosting (Vercel)",
+                "Database (Supabase)",
+                "Admin Dashboard",
+                "Mobile Responsive",
+                "You own everything",
+                "Direct communication",
+              ].map((f) => (
+                <li key={f} className="pricing-feature flex items-center gap-3 text-sm text-white/80">
                   <Check className="h-4 w-4 shrink-0 text-blue-400" />
                   {f}
                 </li>
               ))}
             </ul>
-
             <a
               href="#contact"
               onClick={(e) => {
                 e.preventDefault();
                 document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="pricing-btn block w-full rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 py-3 text-center text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-blue-500/25 hover:brightness-110 active:scale-[0.98]"
+              className="pricing-btn block w-full rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 py-3.5 text-center text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-blue-500/30 hover:brightness-110 active:scale-[0.98]"
             >
               Hire Me
             </a>
           </div>
+        </div>
+
+        {/* Shopify */}
+        <div className="pricing-col relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-6 opacity-60 sm:p-8">
+          <h3 className="mb-1 text-lg font-semibold text-white/70 line-through decoration-white/20 decoration-2">Shopify</h3>
+          <p className="mb-4 text-sm text-white/30">DIY store builder</p>
+          <div className="mb-2">
+            <span className="text-3xl font-bold text-white/40">$39<span className="text-lg">/mo</span></span>
+          </div>
+          <p className="mb-1 text-xs text-white/25">forever</p>
+          <p className="mb-6 text-xs text-white/20 italic">You do it yourself</p>
+          <ul className="space-y-3">
+            {[
+              "Monthly fees never stop",
+              "You build it yourself",
+              "Limited customization",
+              "Shopify owns your store",
+              "Transaction fees on every sale",
+              "Looks like everyone else",
+            ].map((f) => (
+              <li key={f} className="pricing-feature flex items-center gap-3 text-sm text-white/40">
+                <X className="h-4 w-4 shrink-0 text-red-500/80" />
+                {f}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </Section>
